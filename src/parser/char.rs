@@ -1,11 +1,11 @@
 //! Module containing parsers specialized on character streams.
 
-use Parser;
 use combinator::{satisfy, skip_many, token, tokens, Expected, Satisfy, SkipMany, Token};
 use error::{ConsumedResult, ParseError, Tracked};
 use lib::marker::PhantomData;
 use parser::sequence::With;
 use stream::{Stream, StreamOnce};
+use Parser;
 
 /// Parses a character and succeeds if the character is equal to `c`.
 ///
@@ -24,7 +24,7 @@ where
     token(c)
 }
 
-parser!{
+parser! {
     #[derive(Copy, Clone)]
     pub struct Digit;
     /// Parses a base-10 digit.

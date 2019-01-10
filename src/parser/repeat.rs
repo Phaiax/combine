@@ -85,7 +85,7 @@ where
     }
 }
 
-parser!{
+parser! {
     #[derive(Copy, Clone)]
     pub struct SkipCount;
     /// Parses `parser` from zero up to `count` times skipping the output of `parser`.
@@ -200,7 +200,7 @@ where
     }
 }
 
-parser!{
+parser! {
     #[derive(Copy, Clone)]
     pub struct SkipCountMinMax;
     /// Parses `parser` from `min` to `max` times (including `min` and `max`)
@@ -271,11 +271,13 @@ where
 
     fn into_result_<O>(self, value: O) -> ConsumedResult<O, P::Input> {
         match self.state {
-            State::Ok | State::EmptyErr => if self.consumed {
-                ConsumedOk(value)
-            } else {
-                EmptyOk(value)
-            },
+            State::Ok | State::EmptyErr => {
+                if self.consumed {
+                    ConsumedOk(value)
+                } else {
+                    EmptyOk(value)
+                }
+            }
             State::ConsumedErr(e) => ConsumedErr(e),
         }
     }
@@ -538,7 +540,7 @@ impl<A> Extend<A> for Sink<A> {
     }
 }
 
-impl_parser!{ SkipMany(P,), Ignore<Many<Sink<()>, Ignore<P>>> }
+impl_parser! { SkipMany(P,), Ignore<Many<Sink<()>, Ignore<P>>> }
 
 /// Parses `p` zero or more times ignoring the result.
 ///
@@ -560,7 +562,7 @@ where
     SkipMany(ignore(many(ignore(p))))
 }
 
-impl_parser!{ SkipMany1(P,), Ignore<Many1<Sink<()>, Ignore<P>>> }
+impl_parser! { SkipMany1(P,), Ignore<Many1<Sink<()>, Ignore<P>>> }
 
 /// Parses `p` one or more times ignoring the result.
 ///
@@ -696,11 +698,10 @@ where
         let rest = match *parsed_one {
             Some(rest) => rest,
             None => {
-                let (first, rest) = ctry!(self.parser.parse_mode(
-                    mode,
-                    input,
-                    &mut child_state.B.state
-                ));
+                let (first, rest) =
+                    ctry!(self
+                        .parser
+                        .parse_mode(mode, input, &mut child_state.B.state));
                 elements.extend(Some(first));
                 rest
             }
@@ -882,11 +883,10 @@ where
         let rest = match *parsed_one {
             Some(rest) => rest,
             None => {
-                let (first, rest) = ctry!(self.parser.parse_mode(
-                    mode,
-                    input,
-                    &mut child_state.B.state
-                ));
+                let (first, rest) =
+                    ctry!(self
+                        .parser
+                        .parse_mode(mode, input, &mut child_state.B.state));
                 elements.extend(Some(first));
                 rest
             }
@@ -1204,7 +1204,7 @@ where
     }
 }
 
-parser!{
+parser! {
     #[derive(Copy, Clone)]
     pub struct SkipUntil;
     /// Skips input until `end` is encountered or `end` indicates that it has consumed input before

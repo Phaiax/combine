@@ -146,7 +146,7 @@ where
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct IndexPositioner(usize);
 
-clone_resetable!{ () IndexPositioner }
+clone_resetable! { () IndexPositioner }
 
 impl<Item> Positioner<Item> for IndexPositioner
 where
@@ -194,7 +194,7 @@ pub struct SourcePosition {
     pub column: i32,
 }
 
-clone_resetable!{ () SourcePosition }
+clone_resetable! { () SourcePosition }
 
 impl Default for SourcePosition {
     fn default() -> Self {

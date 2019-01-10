@@ -5,12 +5,12 @@ use lib::marker::PhantomData;
 
 use self::ascii::AsciiChar;
 
-use Parser;
 use combinator::{satisfy, skip_many, token, tokens, Expected, Satisfy, SkipMany, Token};
 use error::{ConsumedResult, Info, ParseError, StreamError, Tracked};
-use parser::ParseMode;
 use parser::sequence::With;
+use parser::ParseMode;
 use stream::{uncons_range, FullRangeStream, RangeStream, Stream, StreamOnce};
+use Parser;
 
 use error::FastResult::*;
 
@@ -36,7 +36,7 @@ impl_token_parser! { Digit(), u8, Expected<Satisfy<I, fn (u8) -> bool>> }
 
 macro_rules! byte_parser {
     ($name:ident, $ty:ident, $f:ident) => {{
-        let f = static_fn!{
+        let f = static_fn! {
             (c, u8) -> bool { AsciiChar::from(c).map(|c| c.$f()).unwrap_or(false) }
         };
         $ty(satisfy(f).expected(stringify!($name)), PhantomData)
@@ -480,7 +480,7 @@ macro_rules! take_until {
     }
 }
 
-take_until!{
+take_until! {
     /// Zero-copy parser which reads a range of 0 or more tokens until `a` is found.
     ///
     /// If `a` is not found, the parser will return an error.
@@ -499,7 +499,7 @@ take_until!{
     /// ```
     TakeUntilByte, take_until_byte, memchr, a
 }
-take_until!{
+take_until! {
     /// Zero-copy parser which reads a range of 0 or more tokens until `a` or `b` is found.
     ///
     /// If `a` or `b` is not found, the parser will return an error.
@@ -518,7 +518,7 @@ take_until!{
     /// ```
     TakeUntilByte2, take_until_byte2, memchr2, a, b
 }
-take_until!{
+take_until! {
     /// Zero-copy parser which reads a range of 0 or more tokens until `a`, 'b' or `c` is found.
     ///
     /// If `a`, 'b' or `c` is not found, the parser will return an error.
@@ -727,9 +727,9 @@ pub mod num {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use stream::IteratorStream;
         use stream::buffered::BufferedStream;
         use stream::state::State;
+        use stream::IteratorStream;
 
         #[test]
         fn no_rangestream() {

@@ -16,7 +16,7 @@ use either::Either;
 
 use error::FastResult::*;
 
-parser!{
+parser! {
 #[derive(Copy, Clone)]
 pub struct NotFollowedBy;
 /// Succeeds only if `parser` fails.
@@ -219,6 +219,54 @@ where
     F: FnMut(P::Output) -> B,
 {
     Map(p, f)
+}
+
+#[derive(Copy, Clone)]
+pub struct MapInput<P, F>(P, F)
+where
+    P: Parser;
+impl<I, A, B, P, F> Parser for MapInput<P, F>
+where
+    I: Stream,
+    P: Parser<Input = I, Output = A>,
+    F: FnMut(A, &mut I) -> B,
+{
+    type Input = I;
+    type Output = B;
+    type PartialState = P::PartialState;
+
+    parse_mode!();
+    #[inline]
+    fn parse_mode_impl<M>(
+        &mut self,
+        mode: M,
+        input: &mut Self::Input,
+        state: &mut Self::PartialState,
+    ) -> ConsumedResult<Self::Output, Self::Input>
+    where
+        M: ParseMode,
+    {
+        match self.0.parse_mode(mode, input, state) {
+            ConsumedOk(x) => ConsumedOk((self.1)(x, input)),
+            EmptyOk(x) => EmptyOk((self.1)(x, input)),
+            ConsumedErr(err) => ConsumedErr(err),
+            EmptyErr(err) => EmptyErr(err),
+        }
+    }
+
+    forward_parser!(add_error add_consumed_expected_error parser_count, 0);
+}
+
+/// Equivalent to [`p.map_input(f)`].
+///
+/// [`p.map_input(f)`]: ../parser/trait.Parser.html#method.map_input
+#[inline(always)]
+pub fn map_input<P, F, B>(p: P, f: F) -> MapInput<P, F>
+where
+    P: Parser,
+    F: FnMut(P::Output, &mut P::Input) -> B,
+{
+    MapInput(p, f)
 }
 
 #[derive(Copy, Clone)]
@@ -1023,7 +1071,7 @@ impl StrLike for [u8] {
     }
 }
 
-parser!{
+parser! {
 pub struct FromStr;
 type PartialState = P::PartialState;
 
@@ -1209,13 +1257,9 @@ macro_rules! opaque {
     };
     ($e: expr,) => {
         $crate::parser::combinator::opaque(
-            move |f: &mut FnMut(
-                &mut $crate::Parser<
-                    Input = _,
-                    Output = _,
-                    PartialState = _,
-                >,
-            )| { f(&mut $e) },
+            move |f: &mut FnMut(&mut $crate::Parser<Input = _, Output = _, PartialState = _>)| {
+                f(&mut $e)
+            },
         )
     };
 }

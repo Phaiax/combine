@@ -52,6 +52,8 @@ pub mod buffered;
 pub mod easy;
 /// Stateful stream wrappers.
 pub mod state;
+/// Stream wrapper allowing custom state to be used.
+pub mod user_state;
 
 /// A type which has a position.
 pub trait Positioned: StreamOnce {
@@ -127,10 +129,10 @@ pub trait Resetable {
     fn reset(&mut self, checkpoint: Self::Checkpoint);
 }
 
-clone_resetable!{('a) &'a str}
-clone_resetable!{('a, T) &'a [T]}
-clone_resetable!{('a, T) SliceStream<'a, T> }
-clone_resetable!{(T: Clone) IteratorStream<T>}
+clone_resetable! {('a) &'a str}
+clone_resetable! {('a, T) &'a [T]}
+clone_resetable! {('a, T) SliceStream<'a, T> }
+clone_resetable! {(T: Clone) IteratorStream<T>}
 
 /// A stream of tokens which can be duplicated
 pub trait Stream: StreamOnce + Resetable + Positioned {}
@@ -139,7 +141,8 @@ impl<I> Stream for I
 where
     I: StreamOnce + Positioned + Resetable,
     I::Error: ParseError<I::Item, I::Range, I::Position>,
-{}
+{
+}
 
 #[inline]
 pub fn uncons<I>(input: &mut I) -> ConsumedResult<I::Item, I>
@@ -238,11 +241,13 @@ where
 {
     match input.uncons_range(size) {
         Err(err) => wrap_stream_error(input, err),
-        Ok(x) => if size == 0 {
-            EmptyOk(x)
-        } else {
-            ConsumedOk(x)
-        },
+        Ok(x) => {
+            if size == 0 {
+                EmptyOk(x)
+            } else {
+                ConsumedOk(x)
+            }
+        }
     }
 }
 
@@ -402,9 +407,11 @@ impl<'a> RangeStreamOnce for &'a str {
     {
         let mut chars = self.chars();
         match chars.next() {
-            Some(c) => if !f(c) {
-                return EmptyErr(Tracked::from(StringStreamError::UnexpectedParse));
-            },
+            Some(c) => {
+                if !f(c) {
+                    return EmptyErr(Tracked::from(StringStreamError::UnexpectedParse));
+                }
+            }
             None => return EmptyErr(Tracked::from(StringStreamError::UnexpectedParse)),
         }
 
